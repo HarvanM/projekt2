@@ -1,63 +1,69 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
+#include <string.h>
 
+double diodeEquation(double *u0, double *r, double intervalLower, double intervalHigher);
 
-unsigned long int factorial(unsigned long int number);
-
-long double diode(double u0, double r, long double eps);
+double diode(double u0, double r, double eps, double result, double *intervalLower, double *intervalHigher);
 
 int main(int argc, char *argv[]){
-    printf("%0.10Lf", diode(5, 10e3, 1e-10));
+    bool wrongInput = false;
+    double u0 = 0;
+    double r = 0;
+    double eps = 0;
+    int stringLength = 0;
+    //check for correct input
+    if (argc != 4){
+        wrongInput = true;
+    }
+    printf("%d", stringLength);
+    for (int i = 1; i <= argc; i++){
+        stringLength = strlen(argv[i]);
+        printf("%d", stringLength);
+        for (int j = 0; j < stringLength; j++){
+            if((argv[i][j] > '9' && argv[i][j] < '0') || argv[i][j] != '-' || argv[i][j] != '.'){
+                wrongInput = true;
+            } 
+        }
+    }
+    if (wrongInput == false) {
+        //if input is correct, save it to variabiles
+        u0 = atof(argv[1]);
+        r = atof(argv[2]);
+        eps = atof(argv[3]);
+    }
+    if (wrongInput == true){
+        fprintf(stderr, "Wrong Input");
+        return 0;
+    }
+    double intervalLower = 0;
+    double intervalHigher = u0;
+    double Up = diode(u0, r, eps, diodeEquation(&u0, &r, intervalLower, intervalHigher), &intervalLower, &intervalHigher);
+    double Ip = (u0 - Up) / r;
+    printf("Up=%g V\nIp=%g A\n", Up, Ip);
 }
 
-unsigned long int factorial(unsigned long int number){
-    if (number == 0){
-        return 1;
-    }
-    for (int i = number - 1; i > 0; i--){
-        number = number * i;
-    }
-    return number;
-}
-
-long double diode(double u0, double r, long double eps){
+double diodeEquation(double *u0, double *r, double intervalLower, double intervalHigher){
     const double I0 = pow(10, -12);
     const double UT = 0.0258563;
-    long double ID = 0;
-    long double ID_last = 0;
-    long double delta = 1000;
-    long double interval[2] = {0, u0};
-    long double stred = 0;
-    for (int i = 0; delta > eps; i++){
-        stred = ((interval[0] + interval[1]) / 2);
-        ID = I0 * (exp(stred/UT) - 1) - ((u0 - stred) / r);
-        if (ID > 0){
-            interval[1] = stred;
-            if ((ID - ID_last) > 0){
-                delta = ID - ID_last;
-            }
-            else
-            {
-                delta = ID_last - ID;
-            }
-            ID_last = ID;
-        }
-        if (ID < 0){
-            interval[0] = stred;
-            if ((ID - ID_last) > 0){
-                delta = ID - ID_last;
-            }
-            else
-            {
-                delta = ID_last - ID;
-            }
-            ID_last = ID;
-        }
-        if (ID == 0){
-            
-            return stred;
-        }
+    double middle = (intervalLower + intervalHigher) / 2;
+    return (I0 * (exp(middle/UT) - 1) - ((*u0 - middle) / *r));
+}
+
+double diode(double u0, double r, double eps, double result, double *intervalLower, double *intervalHigher){
+    if ((*intervalHigher - *intervalLower) < eps){
+        return (*intervalLower + *intervalHigher) / 2;
     }
-    return stred;
+    if (result == 0){
+        return (*intervalLower + *intervalHigher) / 2;
+    }
+    if (result > 0){
+        *intervalHigher = (*intervalLower + *intervalHigher) / 2;
+    }
+    if (result < 0){
+        *intervalLower = (*intervalLower + *intervalHigher) / 2;
+    }
+    return diode(u0, r, eps, diodeEquation(&u0, &r, *intervalLower, *intervalHigher), intervalLower, intervalHigher);
 }
