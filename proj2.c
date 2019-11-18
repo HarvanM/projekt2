@@ -54,7 +54,8 @@ bool checkForInput(int argc, char *argv[], double *u0, double *r, double *eps){
         if (*err != '\0'){wrongInput = true;}
         *eps = strtod(argv[3], &err);
         if (*err != '\0'){wrongInput = true;}
-        if (r == 0 || eps == 0){wrongInput = true;}
+        //we cannot devide by zero, and eps cant by smaller than limit of double
+        if (*r == 0 || *eps < 1e-16){wrongInput = true;}
     }
     //print error if input is wrong
     if (wrongInput == true){
