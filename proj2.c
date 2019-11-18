@@ -11,85 +11,102 @@
 #include <stdbool.h>
 #include <string.h>
 
-double diodeEquation(double *u0, double *r, double intervalLower, double intervalHigher);
+bool checkForInput(int argc, char *argv[], double *u0, double *r, double *eps);
 
-double diode(double u0, double r, double eps, double result, double *intervalLower, double *intervalHigher);
+double diodeEquation(double *u0, double *r, double *up);
 
-void printResults(double *u0, double *r, double Up);
+double diode(double u0, double r, double eps);
+
+void printResults(double *u0, double *r, double up);
 
 int main(int argc, char *argv[]){
-    bool wrongInput = false;
     double u0 = 0;
     double r = 0;
     double eps = 0;
     //check for correct input
+    if (checkForInput(argc, argv, &u0, &r, &eps) == true){
+        //calculate and print results
+        printResults(&u0, &r, diode(u0, r, eps));
+        return 1;
+    }
+    return 0;
+}
+
+bool checkForInput(int argc, char *argv[], double *u0, double *r, double *eps){
+    //function checks if all inputs are correct, then writes them to variabiles
+    //argc = number of passing arguments
+    //argv = array of passing arguments
+    //u0 = pointer to variabile where we want to store U0
+    //r = pointer to variabile where we want to store R
+    //eps = pointer to variabile where we want to store eps
+    //function returns true when all inputs are correct, else it returns false
+    
+    bool wrongInput = false;
     if (argc != 4){
         wrongInput = true;
-        return 0;
     }
     //if input is correct, save it to variabiles
     if (wrongInput == false){
-        u0 = atof(argv[1]);
-        r = atof(argv[2]);
-        eps = atof(argv[3]);
-        if (r == 0 || eps == 0){
-            wrongInput = true;
-        }
+        char *err;
+        *u0 = strtod(argv[1], &err);
+        if (*err != '\0'){wrongInput = true;}
+        *r = strtod(argv[2], &err);
+        if (*err != '\0'){wrongInput = true;}
+        *eps = strtod(argv[3], &err);
+        if (*err != '\0'){wrongInput = true;}
+        if (r == 0 || eps == 0){wrongInput = true;}
     }
     //print error if input is wrong
     if (wrongInput == true){
-        fprintf(stderr, "Wrong input");
-        return 0;
+        fprintf(stderr, "Wrong input\n");
+        return false;
     }
-    //set default values for interval
-    double intervalLower = 0;
-    double intervalHigher = u0;
-    //calculate and print results
-    printResults(&u0, &r, diode(u0, r, eps, diodeEquation(&u0, &r, intervalLower, intervalHigher), &intervalLower, &intervalHigher));
-    return 1;
+    else {
+        return true;
+    }
 }
 
-double diodeEquation(double *u0, double *r, double intervalLower, double intervalHigher){
+double diodeEquation(double *u0, double *r, double *up){
     //function calculates voltage on diode from input parameters
     //u0 = pointer to voltage on power source
     //r = pointer to resistatnce R
-    //intervalLower= lower value in interval, where we want to calculate
-    //intervalHigher = higher value in interval, where we want to calculate
+    //up = pointer to voltage up
     //returns voltae on diode from input parameters
     
     //constants
     const double I0 = pow(10, -12);
     const double UT = 0.0258563;
-    //calculates average from interval
-    double average = (intervalLower + intervalHigher) / 2;
-    return (I0 * (exp(average/UT) - 1) - ((*u0 - average) / *r));
+    //return result of equation
+    return (I0 * (exp(*up/UT) - 1) - ((*u0 - *up) / *r));
 }
 
-double diode(double u0, double r, double eps, double result, double *intervalLower, double *intervalHigher){
-    //functions recursively calculates voltage on diode with inputed precision 
+double diode(double u0, double r, double eps){
+    //functions calculates voltage on diode with inputed precision 
     //u0= voltage on power source
     //r= resistance R
     //eps= epsilon, or precision with which we want to calculate
-    //result= result from last called function
-    //intervalLower= lower value of interval in which we are calculating
-    //intervalHigher= higher value of interval in which we are calculating 
     
-    //if we found result with demanded precision, return it
-    if ((*intervalHigher - *intervalLower) < eps || result == 0){
-        return (*intervalLower + *intervalHigher) / 2;
+    double intervalLower = 0;
+    double intervalHigher = u0;
+    double result = 0;
+    double average = 0;
+    //calculate until desired precision is achieved
+    while((intervalHigher - intervalLower) >= eps){
+        average = (intervalLower + intervalHigher) / 2;
+        result = diodeEquation(&u0, &r, &average);
+        //if last result was higher than 0
+        if (result > 0){
+            //save last result to higher value of interval
+            intervalHigher = average;
+        }
+        //if last result was lower than 0
+        if (result < 0){
+            //save last result to lower value of interval
+            intervalLower = average;
+        }
     }
-    //if last result was higher than 0
-    if (result > 0){
-        //save last result to higher value of interval
-        *intervalHigher = (*intervalLower + *intervalHigher) / 2;
-    }
-    //if last result was lower than 0
-    if (result < 0){
-        //save last result to lower value of interval
-        *intervalLower = (*intervalLower + *intervalHigher) / 2;
-    }
-    //return same function with new result
-    return diode(u0, r, eps, diodeEquation(&u0, &r, *intervalLower, *intervalHigher), intervalLower, intervalHigher);
+    //return voltage after calculations are done
+    return average;
 }
 
 void printResults(double *u0, double *r, double Up){
