@@ -33,6 +33,14 @@ int main(int argc, char *argv[]){
 }
 
 bool checkForInput(int argc, char *argv[], double *u0, double *r, double *eps){
+    //function checks if all inputs are correct, then writes them to variabiles
+    //argc = number of passing arguments
+    //argv = array of passing arguments
+    //u0 = pointer to variabile where we want to store U0
+    //r = pointer to variabile where we want to store R
+    //eps = pointer to variabile where we want to store eps
+    //function returns true when all inputs are correct, else it returns false
+    
     bool wrongInput = false;
     if (argc != 4){
         wrongInput = true;
