@@ -103,10 +103,11 @@ double diode(double u0, double r, double eps){
             intervalLower = average;
         }
         //if new average is same as last average, return average
-        if (average-last_average == 0) return average;
+        if (average-last_average == 0 || average-last_average == atof("inf")) return average;
         //set new average
         last_average = average;
-    } while(fabs(result) >= eps);
+    } while((intervalHigher - intervalLower) >= eps);
+    
     //return voltage after calculations are done
     return average;
 }
