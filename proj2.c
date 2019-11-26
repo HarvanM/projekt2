@@ -2,7 +2,7 @@
  * @name Projekt 2 - Iteracne vypocty
  * @author Mário Harvan 
  * login: xharva03
- * version: V1.0
+ * version: V1.2
  */
 
 #include <stdio.h>
@@ -59,11 +59,10 @@ bool checkForInput(int argc, char *argv[], double *u0, double *r, double *eps){
     if (*err != '\0') return false;
     *eps = strtod(argv[3], &err);
     if (*err != '\0') return false;
-    //we cannot devide by zero, and eps cant by smaller than limit of double
+    //we cannot devide by zero and voltage cant be lower than zero
     if (*r == 0 || *u0 < 0) return false;
     
     return true;
-    
 }
 
 double diodeEquation(double *u0, double *r, double *up){
@@ -82,6 +81,7 @@ double diode(double u0, double r, double eps){
     //u0= voltage on power source
     //r= resistance R
     //eps= epsilon, or precision with which we want to calculate
+    //function returns voltage on diode
     
     double intervalLower = 0;
     double intervalHigher = u0;
@@ -92,21 +92,21 @@ double diode(double u0, double r, double eps){
     do {
         average = (intervalLower + intervalHigher) / 2;
         result = diodeEquation(&u0, &r, &average);
-        //if last result was higher than 0
+        //if result was higher than 0
         if (result > 0){
-            //save last result to higher value of interval
+            //save result to higher value of interval
             intervalHigher = average;
         }
-        //if last result was lower than 0
+        //if result was lower than 0
         if (result < 0){
-            //save last result to lower value of interval
+            //save result to lower value of interval
             intervalLower = average;
         }
         //if new average is same as last average, return average
-        if (average-last_average == 0) return average;
+        if (average-last_average == 0 || average-last_average == atof("inf")) return average;
         //set new average
         last_average = average;
-    } while(fabs(result) >= eps);
+    } while((intervalHigher - intervalLower) >= eps);
     //return voltage after calculations are done
     return average;
 }
