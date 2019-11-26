@@ -59,7 +59,7 @@ bool checkForInput(int argc, char *argv[], double *u0, double *r, double *eps){
     if (*err != '\0') return false;
     *eps = strtod(argv[3], &err);
     if (*err != '\0') return false;
-    //we cannot devide by zero, and eps cant by smaller than limit of double
+    //we cannot devide by zero and voltage cant be lower than zero
     if (*r == 0 || *u0 < 0) return false;
     
     return true;
@@ -82,6 +82,7 @@ double diode(double u0, double r, double eps){
     //u0= voltage on power source
     //r= resistance R
     //eps= epsilon, or precision with which we want to calculate
+    //function returns voltage on diode
     
     double intervalLower = 0;
     double intervalHigher = u0;
