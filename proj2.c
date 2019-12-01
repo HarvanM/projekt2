@@ -88,6 +88,8 @@ double diode(double u0, double r, double eps){
     double result = 0;
     double average = 0;
     double last_average = 0;
+    //if resistance is infinite, return 0 volts
+    if(r == atof("inf")) return 0;
     //calculate until desired precision is achieved
     do {
         average = (intervalLower + intervalHigher) / 2;
